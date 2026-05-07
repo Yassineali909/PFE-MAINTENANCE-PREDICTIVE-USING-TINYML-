@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# MLflow
+mlops/mlflow.db
+mlops/mlruns/
+
+# IoT / Edge Impulse (Exclude compiled objects, keep source)
+*.o
+*.a
+*.so
+mlops/models/edge-impulse-sdk/build/
+
+# OTA Binaries
+ota-server/firmware/*.bin
+
+# Docker logs
+*.log

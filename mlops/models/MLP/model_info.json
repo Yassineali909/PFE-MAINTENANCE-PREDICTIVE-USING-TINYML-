@@ -1,0 +1,12 @@
+{
+  "model_name": "MLP",
+  "version": "20260507_011352",
+  "trained_at": "2026-05-07T01:13:52.783695",
+  "accuracy": 1.0,
+  "f1_score": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "cv_accuracy": 0.9925,
+  "pkl_file": "model_v20260507_011352.pkl",
+  "status": "Staging"
+}

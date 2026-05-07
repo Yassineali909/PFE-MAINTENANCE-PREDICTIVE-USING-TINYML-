@@ -1,0 +1,12 @@
+{
+  "model_name": "ExtraTrees",
+  "version": "20260507_011337",
+  "trained_at": "2026-05-07T01:13:37.654530",
+  "accuracy": 1.0,
+  "f1_score": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "cv_accuracy": 1.0,
+  "pkl_file": "model_v20260507_011337.pkl",
+  "status": "Staging"
+}

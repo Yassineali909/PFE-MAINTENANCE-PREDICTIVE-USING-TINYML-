@@ -50,7 +50,7 @@ CNN1D_METRICS = {
     "f1_score":  0.9815,
     "precision": 0.9820,
     "recall":    0.9810,
-    "note": "CNN 1D int8 quantized - ESP32-WROOM-32 - CWRU dataset - Edge Impulse"
+    "note": "CNN 1D int8 quantized - ESP32-S3 - CWRU dataset"
 }
 
 # --------------------
@@ -255,9 +255,9 @@ def log_cnn1d(dataset_key):
         "f1_score":   CNN1D_METRICS["f1_score"],
         "precision":  CNN1D_METRICS["precision"],
         "recall":     CNN1D_METRICS["recall"],
-        "framework":  "TensorFlow Lite / Edge Impulse",
+        "framework":  "TensorFlow Lite for Microcontrollers",
         "quantization": "int8",
-        "deployment": "ESP32-WROOM-32",
+        "deployment": "ESP32-S3",
         "note":       CNN1D_METRICS["note"],
         "status":     "Production"   # CNN1D is the reference production model
     }
@@ -269,7 +269,7 @@ def log_cnn1d(dataset_key):
         mlflow.log_param("framework",     "TensorFlow Lite")
         mlflow.log_param("quantization",  "int8")
         mlflow.log_param("dataset",       "CWRU_bearing")
-        mlflow.log_param("deployment",    "ESP32-WROOM-32")
+        mlflow.log_param("deployment",    "ESP32-S3")
         mlflow.log_param("pipeline_data", dataset_key)
         mlflow.log_param("version",       ts)
         for k, v in CNN1D_METRICS.items():

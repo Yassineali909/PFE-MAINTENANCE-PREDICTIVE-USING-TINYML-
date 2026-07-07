@@ -1,10 +1,10 @@
 {
-  "version": "bearing-fault-xgboost_v1",
-  "model_name": "bearing-fault-xgboost",
-  "deployed_at": "2026-05-07T01:33:06.735046",
-  "run_id": "81d0ac95df8441279d1c8bde296e6990",
-  "file": "firmware_bearing-fault-xgboost_v1.bin",
+  "version": "1.0.1",
+  "model": "CNN1D_int8",
+  "accuracy": 0.9823,
+  "trained_at": null,
+  "deployed_at": "2026-05-15T23:41:55.938041",
+  "sha256": "92c45c87bbe5db218eb03c9f0db66e8e79b3cb8166211fa3727b3b3c072c14e3",
   "size_bytes": 225299,
-  "md5": "94ffda65760cc3a0ae7854a4eb64e126",
   "status": "Production"
 }

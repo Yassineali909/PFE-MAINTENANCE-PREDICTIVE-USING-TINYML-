@@ -1,21 +1,19 @@
+# Secrets — NE JAMAIS committer
+certs/
+*.key
+*.pem
+.env
+.watcher_state.json
+
+# Binaires modèles (lourds)
+*.tflite
+*.h
+mlflow.db
+
 # Python
 __pycache__/
 *.pyc
-venv/
-.env
 
-# MLflow
-mlops/mlflow.db
-mlops/mlruns/
-
-# IoT / Edge Impulse (Exclude compiled objects, keep source)
-*.o
-*.a
-*.so
-mlops/models/edge-impulse-sdk/build/
-
-# OTA Binaries
-ota-server/firmware/*.bin
-
-# Docker logs
-*.log
+# Firmware build
+esp32_s3_project/.pio/
+esp32_s3_project/build/

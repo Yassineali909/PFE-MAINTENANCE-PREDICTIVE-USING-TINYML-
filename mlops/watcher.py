@@ -115,21 +115,21 @@ def deploy_to_ota(model_name, version, run_id, client):
         # Copy .pkl as .bin (in real ESP32 OTA this would be the compiled .bin)
         shutil.copy2(pkl_src, bin_dst)
 
-        # Compute MD5 checksum
+        # Compute SHA256 checksum
         with open(bin_dst, "rb") as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
+            sha256 = hashlib.sha256(f.read()).hexdigest()
 
         file_size = os.path.getsize(bin_dst)
 
         # Update version.json
         version_info = {
             "version":      firmware_ver,
-            "model_name":   model_name,
+            "model":        model_name,
             "deployed_at":  datetime.now().isoformat(),
             "run_id":        run_id,
             "file":          f"firmware_{firmware_ver}.bin",
             "size_bytes":    file_size,
-            "md5":           md5,
+            "sha256":        sha256,
             "status":        "Production"
         }
         version_path = os.path.join(OTA_FIRMWARE_DIR, "version.json")
@@ -138,7 +138,7 @@ def deploy_to_ota(model_name, version, run_id, client):
 
         log.info(f"  ✅ Firmware deployed → {bin_dst}")
         log.info(f"  ✅ version.json updated → {firmware_ver}")
-        log.info(f"  MD5: {md5}  Size: {file_size} bytes")
+        log.info(f"  SHA256: {sha256}  Size: {file_size} bytes")
 
         # Clean up temp
         shutil.rmtree(local_dir, ignore_errors=True)
@@ -172,7 +172,7 @@ def watch():
                 model_name = rm.name
 
                 # Get all versions in Production stage
-                prod_versions = client.get_latest_versions(model_name, stages=["Production"])
+                prod_versions = client.search_model_versions(f"name='{model_name}' and current_stage='Production'")
 
                 for mv in prod_versions:
                     version    = mv.version

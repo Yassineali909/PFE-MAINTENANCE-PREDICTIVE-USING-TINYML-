@@ -24,3 +24,6 @@ archive/
 .env.*
 *.old
 *.bak
+data_csv/
+!.env.example
+mlops/

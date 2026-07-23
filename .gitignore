@@ -20,3 +20,7 @@ esp32_s3_project/build/
 esp32_s3_project/
 .env
 archive/
+.env
+.env.*
+*.old
+*.bak

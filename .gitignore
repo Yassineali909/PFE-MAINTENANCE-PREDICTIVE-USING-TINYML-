@@ -19,3 +19,4 @@ esp32_s3_project/.pio/
 esp32_s3_project/build/
 esp32_s3_project/
 .env
+archive/

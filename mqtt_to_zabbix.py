@@ -91,6 +91,7 @@ REQUIRED_KEYS = {"device"}
 
 # 4 classes CWRU — ordre alphabétique LabelEncoder sklearn
 VALID_CLASSES = {"ball", "inner_race", "normal", "outer_race"}
+CLASS_NAMES   = ["ball", "inner_race", "normal", "outer_race"]
 
 # Heartbeat envoyé à Zabbix pour le trigger « perte du script d'ingestion »
 HEARTBEAT_INTERVAL = int(os.getenv("HEARTBEAT_INTERVAL", "30"))
@@ -196,6 +197,22 @@ class TelemetryBridge:
         except (TypeError, ValueError):
             return default
 
+    @classmethod
+    def parse_probs(cls, probs) -> dict:
+        """tinyml.probs : tableau de flottants dans l'ordre CLASS_NAMES.
+
+        Absent sur firmware antérieur — retourne {} sans lever d'exception.
+        Ne suppose pas 4 éléments : n'indexe que jusqu'à min(len(probs), len(CLASS_NAMES)).
+        """
+        result = {}
+        if not isinstance(probs, list):
+            return result
+        for name, value in zip(CLASS_NAMES, probs):
+            f = TelemetryBridge.as_float(value, digits=3)
+            if f is not None:
+                result[name] = f
+        return result
+
     # ── Heartbeat ────────────────────────────────────────────
 
     def _heartbeat_loop(self):
@@ -280,6 +297,7 @@ class TelemetryBridge:
         fault_class   = self.safe_get(data, ("tinyml", "fault_class"))
         anomaly       = self.safe_get(data, ("tinyml", "anomaly"))
         model_version = self.safe_get(data, ("tinyml", "version"))
+        probs         = self.parse_probs(self.safe_get(data, ("tinyml", "probs")))
 
         # Performance embarquée → alimente le tableau comparatif du rapport
         cnn_ms   = self.as_int(self.safe_get(data, ("performance", "cnn1d_ms")))
@@ -314,7 +332,7 @@ class TelemetryBridge:
             anomaly=anomaly, model_version=model_version,
             cnn_ms=cnn_ms, arena_kb=arena_kb, ram_kb=ram_kb, psram_kb=psram_kb,
             mlp_class=mlp_class, mlp_conf=mlp_conf, mlp_ms=mlp_ms,
-            sim_class=sim_class, correct=correct,
+            sim_class=sim_class, correct=correct, probs=probs,
         )
 
     # ── OTA handler ──────────────────────────────────────────
@@ -393,7 +411,7 @@ class TelemetryBridge:
                          anomaly, model_version,
                          cnn_ms, arena_kb, ram_kb, psram_kb,
                          mlp_class, mlp_conf, mlp_ms,
-                         sim_class, correct):
+                         sim_class, correct, probs=None):
         try:
             p = Point(MEASUREMENT).tag("device", device)
 
@@ -409,6 +427,13 @@ class TelemetryBridge:
             if fault_class   is not None: p = p.field("class",         str(fault_class))
             if anomaly       is not None: p = p.field("anomaly",       int(bool(anomaly)))
             if model_version is not None: p = p.field("model_version", str(model_version))
+
+            # Vecteur de probabilités par classe — stockage brut uniquement,
+            # jamais envoyé à Zabbix (cf. _send_to_zabbix)
+            if probs:
+                for name in CLASS_NAMES:
+                    if name in probs:
+                        p = p.field(f"prob_{name}", float(probs[name]))
 
             # Performance embarquée
             if cnn_ms   is not None: p = p.field("cnn1d_ms",      int(cnn_ms))

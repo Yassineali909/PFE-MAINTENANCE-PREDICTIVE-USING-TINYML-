@@ -107,7 +107,10 @@ def log_ota_event_to_influx(version: str, status: str, model_name: str, accuracy
 def get_production_versions(client: MlflowClient, model_name: str) -> list:
     """Retourne la liste des versions en stage Production pour un modèle."""
     try:
-        versions = client.search_model_versions(f"name='{model_name}' and current_stage='Production'")
+        # MLflow rejette le filtre sur current_stage (400 Bad Request) dans les
+        # versions recentes : on filtre sur le nom, puis on trie cote client.
+        all_versions = client.search_model_versions(f"name='{model_name}'")
+        versions = [v for v in all_versions if v.current_stage == "Production"]
         return versions
     except mlflow.exceptions.RestException:
         # Modèle pas encore créé dans le registry
@@ -115,6 +118,46 @@ def get_production_versions(client: MlflowClient, model_name: str) -> list:
     except Exception as e:
         log.warning(f"MLflow registry error for '{model_name}': {e}")
         return []
+
+def download_model_artifact(client: MlflowClient, run_id: str, tmp_dir: str) -> Path | None:
+    """
+    Telecharge l'artefact .tflite depuis MLflow/MinIO par recherche recursive.
+    L'artefact est logue sous artifact_path="model" : il ne se trouve donc pas
+    a la racine, et un simple list_artifacts(run_id) ne le voit pas.
+    """
+    def walk(path=""):
+        try:
+            for art in client.list_artifacts(run_id, path):
+                if art.is_dir:
+                    yield from walk(art.path)
+                else:
+                    yield art.path
+        except Exception:
+            return
+
+    try:
+        target = next((q for q in walk() if q.endswith(".tflite")), None)
+        if not target:
+            log.warning(f"Aucun artefact .tflite dans le run {run_id}")
+            return None
+        local_path = client.download_artifacts(run_id, target, tmp_dir)
+        log.info(f"Artefact telecharge -> {local_path}")
+        return Path(local_path)
+    except Exception as e:
+        log.error(f"Echec du telechargement pour le run {run_id}: {e}")
+        return None
+
+
+def get_quant_params(client: MlflowClient, run_id: str) -> dict:
+    """Relit les parametres de quantification logues comme tags MLflow."""
+    keys = ("input_scale", "input_zp", "output_scale", "output_zp")
+    try:
+        tags = client.get_run(run_id).data.tags
+        return {k: tags[k] for k in keys if k in tags}
+    except Exception as e:
+        log.warning(f"Parametres de quantification indisponibles : {e}")
+        return {}
+
 
 def download_bin_artifact(client: MlflowClient, run_id: str, tmp_dir: str) -> Path | None:
     """
@@ -145,7 +188,8 @@ def download_bin_artifact(client: MlflowClient, run_id: str, tmp_dir: str) -> Pa
 # --------------------
 # OTA Server upload
 # --------------------
-def upload_to_ota_server(bin_path: Path, version: str, model_name: str, accuracy: float = None) -> bool:
+def upload_to_ota_server(bin_path: Path, version: str, model_name: str,
+                         accuracy: float = None, quant: dict = None) -> bool:
     """
     Uploade le .bin vers l'OTA Server via POST /firmware/upload.
     Retourne True si succès.
@@ -157,6 +201,8 @@ def upload_to_ota_server(bin_path: Path, version: str, model_name: str, accuracy
         "accuracy":   accuracy,
         "trained_at": datetime.now().isoformat()
     }
+    if quant:
+        params.update(quant)
     headers = {
         "X-Admin-Token": OTA_ADMIN_TOKEN
     }
@@ -223,20 +269,21 @@ def check_and_deploy(client: MlflowClient):
 
         # Téléchargement du .bin
         with tempfile.TemporaryDirectory() as tmp_dir:
-            bin_path = download_bin_artifact(client, mv.run_id, tmp_dir)
+            bin_path = download_model_artifact(client, mv.run_id, tmp_dir)
 
             if bin_path is None:
                 log.warning(
-                    f"No .bin artifact for {version_key}. "
-                    f"Make sure Edge Impulse .bin is logged as MLflow artifact."
+                    f"Aucun artefact .tflite pour {version_key}. "
+                    f"Verifier que le .tflite est logue via mlflow.log_artifact()."
                 )
                 # Marque quand même comme traité pour ne pas boucler
                 deployed_versions.add(version_key)
-                log_ota_event_to_influx(ota_version, "NO_BIN_ARTIFACT", TARGET_MODEL_NAME, accuracy)
+                log_ota_event_to_influx(ota_version, "NO_MODEL_ARTIFACT", TARGET_MODEL_NAME, accuracy)
                 continue
 
             # Upload vers OTA Server
-            success = upload_to_ota_server(bin_path, ota_version, TARGET_MODEL_NAME, accuracy)
+            quant = get_quant_params(client, mv.run_id)
+            success = upload_to_ota_server(bin_path, ota_version, TARGET_MODEL_NAME, accuracy, quant)
 
         if success:
             deployed_versions.add(version_key)

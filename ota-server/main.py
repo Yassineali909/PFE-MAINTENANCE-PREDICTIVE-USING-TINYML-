@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 # --------------------
 FIRMWARE_DIR    = Path(os.getenv("FIRMWARE_DIR", "/firmware"))
 VERSION_FILE    = FIRMWARE_DIR / "version.json"
-FIRMWARE_FILE   = FIRMWARE_DIR / "firmware_latest.bin"
+FIRMWARE_FILE   = FIRMWARE_DIR / "model.tflite"
 HISTORY_DIR     = FIRMWARE_DIR / "history"
 
 # Simple token pour l'endpoint d'upload (admin)
@@ -148,7 +148,7 @@ def download_firmware(x_esp32_version: str = Header(default=None)):
     return FileResponse(
         path=str(FIRMWARE_FILE),
         media_type="application/octet-stream",
-        filename=f"firmware_v{version}.bin",
+        filename=f"model_v{version}.tflite",
         headers={
             "X-Firmware-Version": version,
             "X-Model-Name":       info.get("model", "unknown"),
@@ -159,10 +159,14 @@ def download_firmware(x_esp32_version: str = Header(default=None)):
 
 @app.post("/firmware/upload", tags=["Admin"])
 async def upload_firmware(
-    version:     str,
-    model_name:  str       = "CNN1D_int8",
-    accuracy:    float     = None,
-    trained_at:  str       = None,
+    version:      str,
+    model_name:   str   = "CNN1D_int8",
+    accuracy:     float = None,
+    trained_at:   str   = None,
+    input_scale:  float = None,
+    input_zp:     int   = None,
+    output_scale: float = None,
+    output_zp:    int   = None,
     file:        UploadFile = File(...),
     x_admin_token: str     = Header(default=None)
 ):
@@ -179,14 +183,14 @@ async def upload_firmware(
         raise HTTPException(status_code=401, detail="Invalid admin token")
 
     # Validation fichier
-    if not file.filename.endswith(".bin"):
-        raise HTTPException(status_code=400, detail="Only .bin files accepted")
+    if not file.filename.endswith(".tflite"):
+        raise HTTPException(status_code=400, detail="Seuls les fichiers .tflite sont acceptes")
 
     # Backup de l'ancien firmware dans history/
     if FIRMWARE_FILE.exists():
         old_info    = load_version_info()
         old_version = old_info.get("version", "unknown")
-        backup_path = HISTORY_DIR / f"firmware_v{old_version}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.bin"
+        backup_path = HISTORY_DIR / f"model_v{old_version}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.tflite"
         FIRMWARE_FILE.rename(backup_path)
         log.info(f"Old firmware backed up → {backup_path.name}")
 
@@ -207,7 +211,13 @@ async def upload_firmware(
         "deployed_at": datetime.now().isoformat(),
         "sha256":      sha256,
         "size_bytes":  size,
-        "status":      "Production"
+        "status":      "Production",
+        "quantization": {
+            "input_scale":  input_scale,
+            "input_zp":     input_zp,
+            "output_scale": output_scale,
+            "output_zp":    output_zp,
+        }
     }
     save_version_info(info)
 
@@ -234,7 +244,7 @@ def get_firmware_history():
     if not HISTORY_DIR.exists():
         return {"history": [], "count": 0}
 
-    files = sorted(HISTORY_DIR.glob("*.bin"), key=lambda f: f.stat().st_mtime, reverse=True)
+    files = sorted(HISTORY_DIR.glob("*.tflite"), key=lambda f: f.stat().st_mtime, reverse=True)
     history = [
         {
             "filename":     f.name,

@@ -7,7 +7,10 @@ certs/
 
 # Binaires modèles (lourds)
 *.tflite
-*.h
+# Headers de modeles : volumineux et regenerables par xxd -i
+*model*_data.h
+cnn1d_model_data.h
+mlp_model_data.h
 mlflow.db
 
 # Python

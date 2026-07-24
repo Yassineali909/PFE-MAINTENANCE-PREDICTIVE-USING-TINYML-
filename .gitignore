@@ -27,3 +27,4 @@ archive/
 data_csv/
 !.env.example
 mlops/
+data_csv_sev/

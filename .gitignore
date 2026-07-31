@@ -7,7 +7,10 @@ certs/
 
 # Binaires modèles (lourds)
 *.tflite
-*.h
+# Headers de modeles : volumineux et regenerables par xxd -i
+*model*_data.h
+cnn1d_model_data.h
+mlp_model_data.h
 mlflow.db
 
 # Python
@@ -17,5 +20,24 @@ __pycache__/
 # Firmware build
 esp32_s3_project/.pio/
 esp32_s3_project/build/
-esp32_s3_project/
 .env
+archive/
+.env
+.env.*
+*.old
+*.bak
+data_csv/
+!.env.example
+mlops/
+data_csv_sev/
+
+esp32_s3_project/src/secrets.h
+esp32_s3_project/.pio/
+esp32_s3_project/src/certs/
+
+# Firmware : seuls les secrets et les artefacts de build sont exclus
+esp32_s3_project/src/secrets.h
+esp32_s3_project/src/certs/
+esp32_s3_project/.pio/
+esp32_s3_project/logs/
+*.log

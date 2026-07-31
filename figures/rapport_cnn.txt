@@ -1,0 +1,19 @@
+=== CNN ===
+Accuracy: 0.2978   F1-macro: 0.3802
+
+              precision    recall  f1-score   support
+
+        ball     1.0000    0.6825    0.8113       189
+  inner_race     1.0000    0.2540    0.4051       189
+      normal     0.0000    0.0000    0.0000       662
+  outer_race     0.1797    1.0000    0.3046       189
+
+    accuracy                         0.2978      1229
+   macro avg     0.5449    0.4841    0.3802      1229
+weighted avg     0.3352    0.2978    0.2339      1229
+
+Confusion (counts):
+[[129   0   0  60]
+ [  0  48   0 141]
+ [  0   0   0 662]
+ [  0   0   0 189]]

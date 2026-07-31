@@ -111,6 +111,8 @@ services:
   ota-server:
     build: ./ota-server
     container_name: ota-server
+    environment:
+      - OTA_ADMIN_TOKEN=${OTA_ADMIN_TOKEN}
     ports:
       - "8090:8090"
     volumes:

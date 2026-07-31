@@ -1,0 +1,19 @@
+=== MLP ===
+Accuracy: 0.9910   F1-macro: 0.9855
+
+              precision    recall  f1-score   support
+
+        ball     0.9894    0.9841    0.9867       189
+  inner_race     0.9840    0.9788    0.9814       189
+      normal     1.0000    1.0000    1.0000       662
+  outer_race     0.9686    0.9788    0.9737       189
+
+    accuracy                         0.9910      1229
+   macro avg     0.9855    0.9854    0.9855      1229
+weighted avg     0.9911    0.9910    0.9911      1229
+
+Confusion (counts):
+[[186   1   0   2]
+ [  0 185   0   4]
+ [  0   0 662   0]
+ [  2   2   0 185]]

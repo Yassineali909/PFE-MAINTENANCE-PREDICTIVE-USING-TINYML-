@@ -1,0 +1,25 @@
+Total windows: 6141
+
+=== ORDRE DES CLASSES (index -> nom) ===
+  0 -> ball
+  1 -> inner_race
+  2 -> normal
+  3 -> outer_race
+
+=== FEATURES : plage BRUTE (avant scaling) ===
+  rms    min=        0.0559  max=        0.7473  mean=        0.1199
+  peak   min=        0.1573  max=        3.6304  mean=        0.4880
+  crest  min=        2.4657  max=        8.3204  mean=        3.6411
+  mean   min=       -0.0495  max=        0.0353  mean=        0.0096
+  std    min=        0.0545  max=        0.7471  mean=        0.1192
+  skew   min=       -0.5546  max=        1.2308  mean=       -0.0835
+  kurt   min=       -0.6566  max=       15.6895  mean=        0.7938
+  fft1   min=       11.0797  max=      218.2356  mean=       28.0116
+  fft2   min=        9.4273  max=      190.5378  mean=       23.8402
+  fft3   min=        8.4679  max=      152.9864  mean=       21.1284
+  fft4   min=        8.0409  max=      142.1734  mean=       19.3269
+  fft5   min=        7.4854  max=      135.6104  mean=       17.8396
+
+=== PARAMS SCALER (a copier dans le firmware) ===
+const float scaler_mean[12]  = {0.119498f, 0.485326f, 3.636714f, 0.009560f, 0.118761f, -0.083929f, 0.788423f, 27.926348f, 23.770988f, 21.083847f, 19.273930f, 17.775462f};
+const float scaler_scale[12] = {0.119954f, 0.602705f, 0.811944f, 0.005984f, 0.120155f, 0.133693f, 1.715077f, 27.871870f, 23.537212f, 20.892349f, 19.626517f, 18.708139f};

@@ -1,0 +1,29 @@
+name: CI Python
+
+on:
+  push:
+    branches: [ test-ci, dev-mlops-cleanup ]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer ruff
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Verifier la syntaxe des .py
+        run: python -m compileall -q .
+
+      - name: Lint ruff (rapport seulement)
+        run: ruff check . --output-format=github || true
